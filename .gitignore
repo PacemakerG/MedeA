@@ -3,17 +3,31 @@ __pycache__/
 .codex
 
 # Large datasets and generated folds
-processed_data/
-processed_data_23subclasses/
-models/processeddata_5fold/
+processed_data/*
+!processed_data/.gitkeep
+processed_data_23subclasses/*
+!processed_data_23subclasses/.gitkeep
+models/processeddata_5fold/*
+!models/processeddata_5fold/.gitkeep
 
 # Model checkpoints and experiment artifacts
 saved_models/
 models/saved_models/
 models/baselinemodels/saved_models/
 models/results/
+experiment_visualizations/
+models/Ablation/results/
+models/Ablation/ablation_*_results.json
 
 # Large binary outputs
 *.pth
 *.npz
 *.npy
+*.png
+*.pdf
+
+# Local documents and reports not intended for the public code repo
+ECG_Classification_Experiment_Report.md
+审稿人意见
+审稿意见中文整理.md
+论文实验与修改计划.md
