@@ -1,0 +1,68 @@
+{
+  "results": {
+    "Full Model (Our)": {
+      "mean_f1": 0.0,
+      "std_f1": 0.0,
+      "mean_auc": 0.0,
+      "std_auc": 0.0,
+      "description": "Full Model (Our) (未运行)"
+    },
+    "w/o Attention": {
+      "mean_f1": 0.738923078783216,
+      "std_f1": 0.01245557353153482,
+      "mean_auc": 0.9353595185073174,
+      "std_auc": 0.006312591447984711,
+      "description": "Backbone Only (无注意力机制)"
+    },
+    "w/o Multi-Head": {
+      "mean_f1": 0.7446355384850749,
+      "std_f1": 0.013843884116341435,
+      "mean_auc": 0.9338959327410498,
+      "std_auc": 0.007348651891280405,
+      "description": "Backbone + Single-Head Attention"
+    },
+    "w/o Learned Query": {
+      "mean_f1": 0.747649356809407,
+      "std_f1": 0.017160138794672892,
+      "mean_auc": 0.9367445754920087,
+      "std_auc": 0.00890128170078087,
+      "description": "Backbone + Fixed Single-Query"
+    },
+    "w/o CNN Backbone": {
+      "mean_f1": 0.6149545734241718,
+      "std_f1": 0.02051005235749137,
+      "mean_auc": 0.8762080516631819,
+      "std_auc": 0.012091082591982194,
+      "description": "Only Attention + Multi-Query"
+    },
+    "w/o Regularization": {
+      "mean_f1": 0.7324077978957926,
+      "std_f1": 0.017605147118399788,
+      "mean_auc": 0.9250823866671807,
+      "std_auc": 0.007290453137436937,
+      "description": "Backbone + Multi-Query + w/o Regularization"
+    },
+    "Simple CNN": {
+      "mean_f1": 0.7456397708954731,
+      "std_f1": 0.01108313143868359,
+      "mean_auc": 0.9326664326370577,
+      "std_auc": 0.005997222732135162,
+      "description": "Simple CNN + Multi-Query"
+    }
+  },
+  "experiment_log": [
+    "✅ [1/6] w/o Attention - 移除注意力机制 - 成功 (1945.8s)",
+    "✅ [2/6] w/o Multi-Head - 单头注意力 - 成功 (2642.6s)",
+    "✅ [3/6] w/o Learned Query - 固定查询 - 成功 (2566.0s)",
+    "✅ [4/6] w/o CNN Backbone - 仅注意力 - 成功 (3842.0s)",
+    "✅ [5/6] w/o Regularization - 无正则化 - 成功 (2766.9s)",
+    "✅ [6/6] Simple CNN - 简化CNN结构 - 成功 (5167.5s)"
+  ],
+  "statistics": {
+    "total_experiments": 6,
+    "successful_experiments": 6,
+    "total_time_seconds": 18930.856061935425,
+    "total_time_minutes": 315.51426769892373,
+    "completion_time": "2025-09-23 02:09:18"
+  }
+}

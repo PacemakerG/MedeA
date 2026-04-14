@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.codex
+
+# Large datasets and generated folds
+processed_data/
+processed_data_23subclasses/
+models/processeddata_5fold/
+
+# Model checkpoints and experiment artifacts
+saved_models/
+models/saved_models/
+models/baselinemodels/saved_models/
+models/results/
+
+# Large binary outputs
+*.pth
+*.npz
+*.npy
