@@ -1,0 +1,214 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+
+\setstretch{1.08}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\setlist[itemize]{leftmargin=1.6em}
+\setlist[enumerate]{leftmargin=1.8em}
+
+\newcommand{\journalname}{Virtual Reality \& Intelligent Hardware}
+\newcommand{\manuscriptnumber}{VRIH-D-26-00032}
+\newcommand{\manuscripttitle}{MeDeA: Decomposable Attention for Intrinsically Interpretable ECG Diagnosis}
+\newcommand{\commentheader}{\textbf{Comment.}}
+\newcommand{\responseheader}{\textbf{Response.}}
+\newcommand{\revisionheader}{\textbf{Revision in the manuscript.}}
+
+\begin{document}
+
+\begin{center}
+{\Large \textbf{Response to the Editor and Reviewers}}\\[0.6em]
+{\normalsize \textbf{Journal:} \journalname}\\
+{\normalsize \textbf{Manuscript No.:} \manuscriptnumber}\\
+{\normalsize \textbf{Title:} \manuscripttitle}\\
+{\normalsize \textbf{Decision:} Major Revision}
+\end{center}
+
+We sincerely thank the Editor and the Reviewers for their careful assessment of our manuscript and for the constructive suggestions. We have revised both the manuscript text and the presentation of the experimental evidence accordingly. In particular, we have clarified the relation between the backbone and the attention module, made the evaluation protocol more explicit, corrected the citation mismatch, strengthened the discussion on generalization and clinical limitations, and moderated claims that were stronger than the currently documented evidence supports. The revised manuscript is therefore more precise in both methodological description and empirical interpretation.
+
+\section*{Summary of Major Revisions}
+
+\begin{itemize}
+    \item We rewrote the method description to make the data flow explicit, including the tensor dimensions from the ECG input to the backbone output, the query/key/value projections, the query-wise attention maps, and the final class-level explanation maps.
+    \item We clarified that the multi-query vectors are global learnable parameters rather than input-derived features, and we removed the ambiguity around the temperature notation by aligning the manuscript with the implemented scaled dot-product form.
+    \item We expanded the experimental protocol description to state the dataset split organization, the default optimization settings, the lack of explicit data augmentation in the released scripts, the seed control, and the boundary between in-house runs and literature-reported comparison methods.
+    \item We added an efficiency-oriented comparison based on reproducible quantities available from the current codebase, including trainable parameter count, FP32 weight footprint, and a lightweight forward-latency benchmark, and we toned down the earlier deployment claims accordingly.
+    \item We revised the narrative of the comparative experiments to avoid implying universal superiority. The revised manuscript now presents MeDeA as a competitive and intrinsically interpretable alternative rather than as an unqualified state-of-the-art method.
+    \item We strengthened the discussion of limitations and clinical translation, especially regarding cross-hospital shift, device shift, sampling-rate mismatch, retrospective public data, and dependence on reliable annotation.
+    \item We corrected the reference mismatch around IMLENet and rechecked the bibliography to replace arXiv-only citations with peer-reviewed versions where available.
+    \item We revised the figure descriptions so that Figures 1--3 are easier to interpret and reproduce, including clearer captions, explicit shape annotations, and a precise explanation of the multi-label prediction-rate matrix.
+\end{itemize}
+
+\section*{Response to the Editor}
+
+\commentheader\ The Editor requested that all reviewer comments be addressed point by point and that every substantive revision be documented clearly.
+
+\responseheader\ We have carefully revised the manuscript in accordance with all comments from the two reviewers. The revised version now provides a clearer description of the MeDeA architecture, explicitly separates code-supported in-house experiments from literature-reported comparisons, corrects the citation issue noted by Reviewer \#1, strengthens the discussion of external validity and clinical limitations, and substantially improves the description of the figures. We have also moderated the performance claims so that they match the evidence documented by the current implementation and experiment logs.
+
+\revisionheader\ The revised manuscript now includes a more explicit methodological narrative, a clarified experimental protocol subsection, an added efficiency note, improved figure captions, a corrected bibliography entry for IMLENet, and an expanded discussion/limitations section. The present response letter documents these changes point by point below.
+
+\section*{Response to Reviewer \#1}
+
+\subsection*{Comment 1.1: Class imbalance handling in the multi-label setting}
+
+\commentheader\ Although BCE is reported for the multi-label task, the manuscript does not explain how class imbalance is handled, especially when class prevalence varies substantially across labels.
+
+\responseheader\ We appreciate this important observation. The original submission indeed under-described the imbalance issue. In the released MeDeA scripts, the main PTB-XL runs use \texttt{BCEWithLogitsLoss} and do not include an additional focal-loss, resampling, or class-balanced reweighting module. We now state this explicitly rather than leaving the reader to infer it. To make the imbalance level transparent, we also report representative prevalence statistics from the five-class PTB-XL setting. For example, in one training fold the positive prevalence is CD 22.5\%, HYP 12.2\%, MI 25.1\%, NORM 43.7\%, and STTC 23.5\%, corresponding to reference \texttt{pos\_weight} values of approximately [3.44, 7.20, 2.98, 1.29, 3.26]. These statistics do not change the main results by themselves, but they now make the learning setting and the difficulty of minority labels explicit.
+
+\revisionheader\ We added a paragraph in the Methods/Experimental Protocol section describing the loss function used by the released implementation, clarifying that the main reported MeDeA results are obtained without an extra class-balancing module, and providing representative class-prevalence statistics to quantify the imbalance.
+
+\subsection*{Comment 1.2: Relationship between the 1D ResNet backbone and the MQAH module}
+
+\commentheader\ The relation between the backbone and MQAH, including feature-dimension matching and the effect of averaging and upsampling attention maps, is not sufficiently clear.
+
+\responseheader\ We agree and have substantially clarified this point. The revised manuscript now explains the computation as a sequence of explicit tensor transformations. In the base PTB-XL MeDeA implementation, the input ECG has shape $(B,12,1000)$, the shared 1D ResNet backbone produces feature maps of shape $(B,512,L')$ with $L'=32$, and class-specific attention heads then operate on these features to produce label-wise logits and label-wise attention maps. In the multi-query formulation, each class head contains $H$ learnable queries of dimension $D$; the projected keys and values are derived from the backbone feature sequence, attention scores are computed as $(B,H,L')$, and the final class-level explanation map is obtained by averaging over the query dimension to yield $(B,L')$. For visualization, this reduced attention sequence is linearly interpolated back to the original signal length and then smoothed with a Gaussian filter. We now make it explicit that the upsampled map is a visualization step, not a second inference module.
+
+\revisionheader\ We rewrote the architecture description, added tensor-shape annotations to the text and to Figures 1--2, and clarified that the explanation pipeline is ``query-wise attention $\rightarrow$ query averaging $\rightarrow$ linear interpolation $\rightarrow$ Gaussian smoothing for visualization only.''
+
+\subsection*{Comment 2.1: Fairness and reproducibility of Table 3}
+
+\commentheader\ Table 3 lacks key details such as training settings, model size, data augmentation, and whether the same data split was adopted across methods.
+
+\responseheader\ We agree that the original presentation was not sufficiently explicit. We have therefore added a dedicated protocol description that states the main in-house settings supported by the repository: PTB-XL 100 Hz processed data, fixed random seed 42, AdamW optimization with learning rate $10^{-3}$ and weight decay $10^{-4}$, early stopping through a patience term, and execution in our dedicated \texttt{ECG} conda environment. We also now state clearly that the released local scripts do \emph{not} apply explicit data augmentation. Most importantly, we now separate two different categories of comparisons that were previously too easy to conflate: (i) in-house runs based on the local repository scripts, and (ii) literature-reported methods quoted from their original papers. Because these two categories do not always share an identical split or tuning pipeline, the revised manuscript no longer uses language suggesting that every entry in Table 3 is a perfectly homogeneous apples-to-apples benchmark.
+
+\revisionheader\ We added an ``Experimental Protocol'' description that reports optimizer, learning rate, weight decay, batch size range, stopping rule, seed control, environment note, and augmentation status, and we revised Table 3 notes to distinguish in-house runs from literature-reported results.
+
+\subsection*{Comment 2.2: Split consistency and tuning protocol for ECGNet, IMLENet, and other baselines}
+
+\commentheader\ The manuscript should clarify whether the same split and a comparable hyperparameter tuning protocol were used for ECGNet, IMLENet, and the other baselines.
+
+\responseheader\ This is a fair request. In the revised manuscript, we explicitly identify which methods were run from local code and which were cited from the literature. For ECGNet, IMLENet, MSW-TN, and related external methods, we no longer imply that they were all reimplemented under one unified in-house pipeline unless that was actually the case. We also explicitly acknowledge that cross-paper comparisons must be interpreted with caution when split definitions, thresholding rules, or tuning budgets are not fully identical. This change also addresses the broader concern that our earlier wording was stronger than the current evidence warranted.
+
+\revisionheader\ We added a clarifying note to Table 3 and revised the surrounding text so that direct and indirect comparisons are clearly separated. We also removed wording that could be interpreted as claiming fully identical hyperparameter search conditions for all external methods.
+
+\subsection*{Comment 2.3: Missing efficiency analysis}
+
+\commentheader\ The manuscript argues for trustworthiness and computational feasibility, but it does not report parameter count, FLOPs, latency, or memory consumption.
+
+\responseheader\ We agree that the original claim was under-supported. In the revised manuscript, we therefore add a compact efficiency note based on reproducible quantities that are directly supported by the current repository snapshot: trainable parameter count, FP32 weight footprint, and a lightweight batch-1 CPU forward-latency benchmark for a $(12 \times 1000)$ input. These results provide a grounded comparison against representative local variants and against a Transformer baseline. They also show that our original wording about deployability needed to be narrowed: MeDeA is not uniformly the lightest model, but it remains substantially more practical than a plain Transformer baseline in forward latency while offering intrinsic label-wise attention decomposition.
+
+\begin{center}
+\small
+\begin{tabular}{lrrr}
+\toprule
+Model & Parameters & FP32 Weight Footprint & Forward Latency (ms) \\
+\midrule
+MeDeA & 5,986,442 & 22.84 MB & 12.11 \\
+MeDeA-Single-Query & 411,205 & 1.57 MB & 3.22 \\
+Inception Baseline & 672,965 & 2.57 MB & 9.30 \\
+Transformer Baseline & 1,202,053 & 4.59 MB & 157.73 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+We emphasize in the revised text that these numbers correspond to reproducible weight size and forward-pass behavior; they should not be over-interpreted as a full systems benchmark. We therefore removed any wording that previously implied an exhaustive FLOPs/peak-memory study when such a study was not actually documented in the original manuscript.
+
+\revisionheader\ We added the efficiency comparison above to the revised manuscript and softened the wording around ``computational feasibility'' so that it matches the available evidence.
+
+\subsection*{Comment 3.1: Clinical applicability and generalization}
+
+\commentheader\ The evaluation is mainly based on public retrospective datasets; the manuscript should discuss robustness across hospitals, devices, and sampling rates, as well as dependence on annotation quality.
+
+\responseheader\ We fully agree. The revised manuscript now states explicitly that the present evidence is limited to retrospective public datasets and does not establish clinical readiness. We added a dedicated limitations discussion covering at least four points: domain shift across hospitals, acquisition differences across devices and lead setups, sampling-rate mismatch, and sensitivity to label quality or annotation noise. We also clarify that the interpretability mechanism should be understood as a model-internal explanatory aid rather than as a substitute for external clinical validation.
+
+\revisionheader\ We expanded the Discussion/Limitations section and revised the conclusion so that the manuscript no longer overstates generalizability beyond the current PTB-XL setting.
+
+\subsection*{Comment 4.1: Citation mismatch around IMLENet}
+
+\commentheader\ IMLENet [27] appears to be mismatched with a non-ECG paper, suggesting a citation or numbering error.
+
+\responseheader\ Thank you for pointing out this error. We rechecked the bibliography and corrected the mismatched IMLENet citation. We also performed a broader pass through the reference list to verify numbering consistency and reduce the reliance on arXiv-only citations when a peer-reviewed version was available.
+
+\revisionheader\ The bibliography has been corrected, the IMLENet mismatch has been fixed, and the surrounding text has been updated to ensure the cited method matches the intended ECG comparison.
+
+\subsection*{Comment 5.1: Figure 1 and Figure 2 captions need more detail}
+
+\commentheader\ The captions and descriptions of Figures 1 and 2 should indicate feature-map dimensions or attention output sizes to improve reproducibility.
+
+\responseheader\ We agree and have revised the figure captions accordingly. The updated figures now describe the tensor flow more explicitly, including the ECG input shape, the backbone output shape, the learnable query shape, the query-wise attention map shape, and the final class-level logits. We also revised the main text so that the figures are not merely schematic illustrations but are tightly coupled to the implemented computation.
+
+\revisionheader\ Figures 1 and 2 have been redrawn and their captions expanded to include explicit shape information and a clearer explanation of each module.
+
+\subsection*{Comment 5.2: Figure 3 should provide counts or explain its construction more clearly}
+
+\commentheader\ Figure 3 currently shows mainly proportional information. Sample counts or a clearer explanation of the confusion-matrix construction would improve interpretability.
+
+\responseheader\ We agree. The revised manuscript now states explicitly that the main matrix is a multi-label prediction-rate matrix, namely
+\[
+P(\mathrm{Pred}=j \mid \mathrm{True}=i),
+\]
+and that it is complemented by a co-occurrence count matrix showing the number of samples satisfying $\mathrm{True}=i$ and $\mathrm{Pred}=j$ simultaneously. This addresses the ambiguity in the earlier version and makes minority-class support easier to interpret.
+
+\revisionheader\ We revised the Figure 3 caption and the corresponding Results text to report the matrix definition and to add the sample-count interpretation alongside the normalized matrix.
+
+\subsection*{Comment 5.3: Too many arXiv citations}
+
+\commentheader\ A relatively large share of the cited related work comes from arXiv; more peer-reviewed journal or conference papers should be included where possible.
+
+\responseheader\ We agree and have revised the reference list accordingly. Wherever a peer-reviewed conference or journal version was available, we replaced or supplemented the arXiv citation with the archival publication. This strengthens both the related-work section and the context for the experimental comparisons.
+
+\revisionheader\ The bibliography and related-work section have been updated to reduce unnecessary reliance on arXiv-only references.
+
+\section*{Response to Reviewer \#2}
+
+\subsection*{Comment 1: Figure 1 is of low resolution}
+
+\commentheader\ Figure 1 is difficult to read and should be replaced by a high-resolution or vector-format figure.
+
+\responseheader\ We agree. Figure 1 has been redrawn in a higher-quality format with larger labels, clearer module boundaries, and explicit dimensional annotations. This change also helped us align the schematic more faithfully with the actual implementation.
+
+\revisionheader\ Figure 1 has been replaced by a high-resolution/vector-style version in the revised manuscript.
+
+\subsection*{Comment 2: Multi-Query Attention Head details are ambiguous, including query generation and the temperature parameter}
+
+\commentheader\ The manuscript does not clearly explain how the multiple learnable queries are generated, Figure 2 suggests they may come from input features, and the value of $\tau$ is not specified.
+
+\responseheader\ We appreciate this comment and agree that the original presentation created unnecessary ambiguity. In the implementation, the queries are \emph{sample-independent} learnable parameters created as a tensor of shape $(H,D)$ and optimized together with the network weights; they are not dynamically generated from each ECG sample. We have revised Figure 2 and the text to state this explicitly. We also clarified the scaling term. The implementation uses the standard scaled dot-product attention normalization,
+\[
+\mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d_{\mathrm{model}}}}\right),
+\]
+which is equivalent to fixing $\tau=\sqrt{d_{\mathrm{model}}}$ if the notation is written in temperature form. To avoid ambiguity, the revised manuscript now adopts the scaled dot-product notation directly instead of introducing a separate free temperature symbol.
+
+\revisionheader\ We revised the MQAH description, corrected Figure 2 so that the queries are shown as learnable parameters rather than input-derived features, and removed the ambiguous standalone temperature notation.
+
+\subsection*{Comment 3: MSW-TN outperforms MeDeA on some metrics}
+
+\commentheader\ The paper should analyze why MSW-TN is better on certain metrics and clarify the advantages of MeDeA.
+
+\responseheader\ We agree and have revised this part of the discussion. The revised manuscript now explicitly acknowledges that MeDeA is not uniformly superior on all performance metrics and that methods such as MSW-TN can be stronger when the objective is purely discriminative accuracy. We therefore changed the narrative from ``best overall'' to ``competitive with a different design emphasis.'' Our interpretation is that MSW-TN benefits from a stronger multi-scale temporal modeling bias, whereas MeDeA intentionally allocates model capacity to disease-decomposed intrinsic attention so that the explanation is built into the prediction path. We now present MeDeA's strength as the interpretability--performance trade-off rather than as universal metric dominance.
+
+We also now report the internal variant comparison more transparently. In the current repository snapshot, the base cross-validated MeDeA run yields a mean Macro F1 of 0.7520 $\pm$ 0.0129, while the single-query control yields 0.7482 $\pm$ 0.0145. This indicates that the multi-query decomposition is useful, but the gain is modest and should not be overstated.
+
+\revisionheader\ The Results/Discussion section has been rewritten to acknowledge the stronger metrics of MSW-TN where applicable and to position MeDeA more accurately as a competitive, intrinsically interpretable model.
+
+\subsection*{Comment 4: Computational overhead of multiple queries}
+
+\commentheader\ Multiple queries likely increase computational cost, but the paper does not report training/inference time, parameter count, or memory consumption.
+
+\responseheader\ We agree and have addressed this concern by adding the efficiency note summarized in our response to Reviewer \#1, Comment 2.3. In addition, we now make the trade-off explicit in the text: moving from a single-query formulation to a decomposed multi-query formulation improves interpretability and slightly improves the internal control performance, but it also increases parameter count and forward cost. This trade-off is now described as a deliberate design choice rather than as a free gain.
+
+\revisionheader\ The revised manuscript now cross-references the efficiency table and explicitly states the computational trade-off introduced by multiple learnable queries.
+
+\subsection*{Comment 5: The manuscript does not provide enough evidence that different queries capture different morphological patterns}
+
+\commentheader\ The paper assumes that different queries capture distinct patterns, but more comprehensive visualizations are needed, such as per-query attention maps across different samples.
+
+\responseheader\ We agree that the original manuscript did not make this evidence sufficiently visible. The key technical reason is that the main visualization in the initial submission showed only the query-averaged class-level attention map. In the revised manuscript, we therefore separate the two levels of interpretation more clearly: (i) per-query attention maps within a class head, and (ii) the final averaged class-level explanation used for compact visualization. This revision makes it clear that the final heatmap is a summary over multiple query-specific views rather than a single monolithic attention trace. We also now state more carefully that the distinct-query interpretation is supported qualitatively by the per-query maps and by the modest but consistent gain over the single-query control, rather than being presented as an unqualified theorem.
+
+\revisionheader\ We expanded the explainability discussion to distinguish per-query and query-averaged views and revised the manuscript text so that the claim about distinct query behavior is presented in a properly evidence-based manner.
+
+\section*{Closing Statement}
+
+We thank the Editor and the Reviewers again for the constructive feedback. The revised manuscript is now more precise in its method description, more transparent about the evaluation protocol and its limitations, and more careful in the scope of its claims. We hope that these revisions have addressed the concerns in a substantive and satisfactory manner, and we respectfully submit the revised manuscript for your further consideration.
+
+\end{document}
